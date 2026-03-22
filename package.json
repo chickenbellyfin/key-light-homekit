@@ -1,0 +1,11 @@
+{
+  "name": "key-light-homekit",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "hap-nodejs": "1.2.0"
+  }
+}

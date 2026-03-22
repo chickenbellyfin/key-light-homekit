@@ -1,0 +1,15 @@
+services:
+  key-light-homekit:
+    build: .
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      - KEY_LIGHT_IP=10.0.0.78
+    volumes:
+      - ./persist:/app/persist
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
