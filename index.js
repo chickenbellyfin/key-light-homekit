@@ -1,7 +1,9 @@
 const {
   Accessory, AccessoryEventTypes, Characteristic, Service,
-  CharacteristicEventTypes, Categories, uuid,
+  CharacteristicEventTypes, Categories, uuid, HAPStorage,
 } = require("hap-nodejs");
+
+HAPStorage.setCustomStoragePath("/data");
 
 const KEY_LIGHT_IP = process.env.KEY_LIGHT_IP;
 if (!KEY_LIGHT_IP) {

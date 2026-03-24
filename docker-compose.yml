@@ -1,12 +1,13 @@
 services:
   key-light-homekit:
+    image: ghcr.io/chickenbellyfin/key-light-homekit
     build: .
     network_mode: host
     restart: unless-stopped
     environment:
       - KEY_LIGHT_IP=10.0.0.78
     volumes:
-      - ./persist:/app/persist
+      - ./key-light-homekit:/data
     healthcheck:
       test: ["CMD", "node", "healthcheck.js"]
       interval: 30s
