@@ -12,7 +12,7 @@ if (!KEY_LIGHT_IP) {
 }
 
 const LIGHT_URL = `http://${KEY_LIGHT_IP}:9123/elgato/lights`;
-const POLL_INTERVAL = 5000;
+const POLL_INTERVAL = 20000;
 const FETCH_TIMEOUT = 5000;
 const ELGATO_TEMP_MIN = 143;
 const ELGATO_TEMP_MAX = 344;
