@@ -18,6 +18,8 @@ const ELGATO_TEMP_MIN = 143;
 const ELGATO_TEMP_MAX = 344;
 
 const state = { on: false, brightness: 50, temperature: 200 };
+let lastSetTime = 0;
+const SET_COOLDOWN = 30000;
 
 async function getLight() {
   const res = await fetch(LIGHT_URL, { signal: AbortSignal.timeout(FETCH_TIMEOUT) });
@@ -43,6 +45,7 @@ function log(source, msg) {
 function onSet(props, callback) {
   const desc = Object.entries(props).map(([k, v]) => `${k}=${v}`).join(" ");
   log("homekit", desc);
+  lastSetTime = Date.now();
   setLight(props).then(() => callback(), () => callback());
 }
 
@@ -122,6 +125,10 @@ const pollCharacteristics = [
 ];
 
 async function poll() {
+  if (Date.now() - lastSetTime < SET_COOLDOWN) {
+    setTimeout(poll, POLL_INTERVAL);
+    return;
+  }
   try {
     const prev = { ...state };
     await getLight();
