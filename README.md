@@ -17,6 +17,7 @@ Exposes an Elgato Key Light to Apple HomeKit. Controls on/off, brightness, and c
          - ./key-light-homekit:/data
    ```
 2. Set `KEY_LIGHT_IP` to your Key Light's IP address
+   - Optional: set `COLOR_TEMP` (143–344, mireds) to lock the color temperature at a fixed value. HomeKit will not show the temperature slider, and the light will be reset to this value if it ever drifts.
 3. Deploy:
    ```
    docker compose up -d

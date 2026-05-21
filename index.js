@@ -17,6 +17,12 @@ const FETCH_TIMEOUT = 5000;
 const ELGATO_TEMP_MIN = 143;
 const ELGATO_TEMP_MAX = 344;
 
+const COLOR_TEMP = process.env.COLOR_TEMP ? parseInt(process.env.COLOR_TEMP, 10) : null;
+if (COLOR_TEMP !== null && (isNaN(COLOR_TEMP) || COLOR_TEMP < ELGATO_TEMP_MIN || COLOR_TEMP > ELGATO_TEMP_MAX)) {
+  console.error(`ERROR: COLOR_TEMP must be an integer between ${ELGATO_TEMP_MIN} and ${ELGATO_TEMP_MAX}`);
+  process.exit(1);
+}
+
 const state = { on: false, brightness: 50, temperature: 200 };
 let lastSetTime = 0;
 const SET_COOLDOWN = 30000;
@@ -77,15 +83,20 @@ lightService
     onSet({ brightness: value }, callback);
   });
 
-lightService
-  .addCharacteristic(Characteristic.ColorTemperature)
-  .setProps({ minValue: ELGATO_TEMP_MIN, maxValue: ELGATO_TEMP_MAX })
-  .updateValue(state.temperature)
-  .on(CharacteristicEventTypes.GET, (callback) => callback(null, state.temperature))
-  .on(CharacteristicEventTypes.SET, (value, callback) => {
-    state.temperature = value;
-    onSet({ temperature: value }, callback);
-  });
+if (COLOR_TEMP === null) {
+  lightService
+    .addCharacteristic(Characteristic.ColorTemperature)
+    .setProps({ minValue: ELGATO_TEMP_MIN, maxValue: ELGATO_TEMP_MAX })
+    .updateValue(state.temperature)
+    .on(CharacteristicEventTypes.GET, (callback) => callback(null, state.temperature))
+    .on(CharacteristicEventTypes.SET, (value, callback) => {
+      state.temperature = value;
+      onSet({ temperature: value }, callback);
+    });
+} else {
+  state.temperature = COLOR_TEMP;
+  setLight({ temperature: COLOR_TEMP }).catch(() => {});
+}
 
 accessory.on(AccessoryEventTypes.IDENTIFY, (paired, callback) => {
   log("homekit", `identify (paired: ${paired})`);
@@ -121,8 +132,10 @@ process.on("unhandledRejection", (err) => {
 const pollCharacteristics = [
   [Characteristic.On, "on"],
   [Characteristic.Brightness, "brightness"],
-  [Characteristic.ColorTemperature, "temperature"],
 ];
+if (COLOR_TEMP === null) {
+  pollCharacteristics.push([Characteristic.ColorTemperature, "temperature"]);
+}
 
 async function poll() {
   if (Date.now() - lastSetTime < SET_COOLDOWN) {
@@ -132,6 +145,11 @@ async function poll() {
   try {
     const prev = { ...state };
     await getLight();
+    if (COLOR_TEMP !== null && state.temperature !== COLOR_TEMP) {
+      log("light", `temperature drifted to ${state.temperature}, resetting to ${COLOR_TEMP}`);
+      await setLight({ temperature: COLOR_TEMP });
+      state.temperature = COLOR_TEMP;
+    }
     for (const [char, key] of pollCharacteristics) {
       if (prev[key] !== state[key]) {
         log("light", `${key}: ${prev[key]} -> ${state[key]}`);
